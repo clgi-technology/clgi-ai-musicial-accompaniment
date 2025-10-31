@@ -1,17 +1,19 @@
 # 🎶 Church AI Accompaniment  
-**CLGI and other Pentecostal Gospel Audio → AI Model → Cantabile Accompaniment**  
-*Fully automated, GitHub-native, iPhone-controlled pipeline to source audio, label and train the audio and then create an AI model that gets trained on the data which is then loaded onto a gaming PC to provide music accompaniment to a singer*
+  
+**Fully automated, GitHub-native, iPhone-controlled pipeline to source audio then label and train the audio and then create an AI model that gets trained on the data which is then loaded onto a gaming PC to provide music accompaniment to a singer**
 *Singer is able to sing in the mic and the AI is able to understand the pitch, tempo and what advanced chords/notes to play to accompany the singer all in real time*
+*CLGI and other Pentecostal Gospel Audio → AI Model → Cantabile Accompaniment*
+
 ---
 
 ## 📖 Requirements
 
-| Name                                   | Purpose                                                                                |
-| -------------------------------------- | -------------------------------------------------------------------------------------- |
-| AWS ACCOUNT                            | Need S3, SQS, Lambda, Batch, IAM, ECS, ECR, Autoscalling, EC2, Sagemaker               |
-| Radeon Gaming PC w/ GPU 5090           | Needed to reduce latency to under 15ms so AI music is not laggy                        |
-| RME BABYFACE FS PRO AUDIO INTERFACE    | Needed to connect a microphone or PA system to the PC and reduce latency               |
-| PC OPTIMAZATION SCRIPTS                | Further help reduce latency & Jitter (throttles CPU and RAM an other parts of the PC)  |
+| Name                                   | Purpose                                                                                |  Estimated Cost                                                                        |
+| -------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| AWS ACCOUNT                            | Need S3, SQS, Lambda, Batch, IAM, ECS, ECR, Autoscalling, EC2, Sagemaker               | Expect $200 a month for training with GPU machines are needed                          |
+| Radeon Gaming PC w/ GPU 5090           | Needed to reduce latency to under 15ms so AI music is not laggy                        | Aprox $6000                                                                            |
+| RME BABYFACE FS PRO AUDIO INTERFACE    | Needed to connect a microphone or PA system to the PC and reduce latency               | Aprox $1000                                                                            |
+| PC OPTIMAZATION SCRIPTS                | Further help reduce latency & Jitter (throttles CPU and RAM an other parts of the PC)  | Cantibile is used in this version which is $60, other option are better for up to $500 |
 
 
 ---
@@ -154,6 +156,7 @@ aws s3 cp test.onnx s3://clgihq-audio/models/debug-test.onnx
 ---
 
 ### ✝️ THE CHURCH AI ACCOMPANIMENT — HELPING CHURCHES ONE KEY AT A TIME
+
 
 
 
