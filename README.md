@@ -17,6 +17,9 @@ church-ai-pipeline/
 ├── download-chunk/
 │   ├── download-chunk.ps1
 │   └── chunk.ps1
-├── README.md
-└── .gitignore
+├── .github/scripts/
+│   └── download_chunk.py
+├── urls.txt
+└── README.md
 ```
+
