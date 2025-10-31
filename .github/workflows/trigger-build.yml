@@ -1,0 +1,59 @@
+# .github/workflows/trigger-build.yml
+name: Trigger CodeBuild
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'trainer/**'
+      - 'labeler/**'
+      - 'verify/**'
+      - 'Dockerfile*'
+      - 'buildspec.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # Required for OIDC
+
+    steps:
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::224553687012:role/GitHubActionsIngestRole
+          aws-region: us-east-1
+          role-session-name: github-codebuild-trigger
+
+      - name: Start CodeBuild Project
+        run: |
+          echo "Starting CodeBuild project: AI-Musician-Labeler"
+          BUILD_ID=$(aws codebuild start-build \
+            --project-name AI-Musician-Labeler \
+            --query 'build.id' \
+            --output text)
+          
+          echo "Build started: $BUILD_ID"
+          echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
+
+      - name: Wait for CodeBuild to Complete
+        run: |
+          BUILD_ID="${{ steps.start-build.outputs.build_id }}"
+          echo "Waiting for build $BUILD_ID to finish..."
+          aws codebuild batch-get-builds --ids "$BUILD_ID" --query 'builds[0].buildStatus' --output text
+          
+          # Poll until complete
+          until [ "$STATUS" = "SUCCEEDED" ] || [ "$STATUS" = "FAILED" ] || [ "$STATUS" = "STOPPED" ]; do
+            sleep 10
+            STATUS=$(aws codebuild batch-get-builds --ids "$BUILD_ID" --query 'builds[0].buildStatus' --output text)
+            echo "Current status: $STATUS"
+          done
+          
+          if [ "$STATUS" = "SUCCEEDED" ]; then
+            echo "CodeBuild succeeded!"
+            exit 0
+          else
+            echo "CodeBuild failed with status: $STATUS"
+            exit 1
+          fi
