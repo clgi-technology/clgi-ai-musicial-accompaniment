@@ -1,0 +1,38 @@
+version: 0.2
+env:
+  variables:
+    AWS_ACCOUNT_ID: "224553687012"
+    AWS_REGION: "us-east-1"
+
+phases:
+  install:
+    runtime-versions:
+      docker: 20
+    commands:
+      - echo "ECR Login..."
+      - aws ecr get-login-password --region $AWS_REGION |
+          docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
+  build:
+    commands:
+      # Build & Push All
+      - echo "Building LABELER..."
+      - docker build -f labeler/Dockerfile -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/clgihq-labeler:$CODEBUILD_RESOLVED_SOURCE_VERSION ./labeler
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/clgihq-labeler:$CODEBUILD_RESOLVED_SOURCE_VERSION
+
+      - echo "Building TRAINER..."
+      - docker build -f trainer/Dockerfile -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/clgihq-trainer:$CODEBUILD_RESOLVED_SOURCE_VERSION ./trainer
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/clgihq-trainer:$CODEBUILD_RESOLVED_SOURCE_VERSION
+
+      - echo "Building VERIFY..."
+      - docker build -f verify/Dockerfile -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/verify-model-repo:$CODEBUILD_RESOLVED_SOURCE_VERSION ./verify
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/verify-model-repo:$CODEBUILD_RESOLVED_SOURCE_VERSION
+
+      # Update Batch + Lambda
+      - aws batch register-job-definition --job-definition-name clgihq-labeler-v1 --type container --container-properties "{\"image\": \"$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/clgihq-labeler:$CODEBUILD_RESOLVED_SOURCE_VERSION\", \"vcpus\": 4, \"memory\": 16000}"
+      - aws batch register-job-definition --job-definition-name clgihq-trainer-v1 --type container --container-properties "{\"image\": \"$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/clgihq-trainer:$CODEBUILD_RESOLVED_SOURCE_VERSION\", \"vcpus\": 4, \"memory\": 32000, \"resourceRequirements\": [{\"type\": \"GPU\", \"value\": \"1\"}]}"
+      - aws lambda update-function-code --function-name verify-model-lambda --image-uri $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/verify-model-repo:$CODEBUILD_RESOLVED_SOURCE_VERSION --publish
+
+      # Tag as working
+      - IMAGE_DIGEST=$(aws ecr describe-images --repository-name clgihq-labeler --image-ids imageTag=$CODEBUILD_RESOLVED_SOURCE_VERSION --query 'imageDetails[0].imageDigest' --output text)
+      - aws ecr tag-resource --resource-arn arn:aws:ecr:$AWS_REGION:$AWS_ACCOUNT_ID:image/clgihq-labeler@$IMAGE_DIGEST --tags Key=status,Value=working
