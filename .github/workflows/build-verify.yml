@@ -43,8 +43,7 @@ jobs:
         aws lambda update-function-code \
           --function-name verify-model-lambda \
           --image-uri ${{ steps.build.outputs.image_uri }} \
-          --region us-east-1
-
-        # Wait for update to complete
+          --region us-east-1 \
+          --publish
         aws lambda wait function-updated --function-name verify-model-lambda
-        echo "Lambda UPDATED with $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+        echo "Lambda UPDATED + PUBLISHED"
