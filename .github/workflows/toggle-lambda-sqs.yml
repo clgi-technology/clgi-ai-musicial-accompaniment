@@ -1,5 +1,5 @@
+# .github/workflows/toggle-sqs-trigger.yml
 name: Toggle Lambda SQS Trigger
-
 on:
   workflow_dispatch:
     inputs:
@@ -10,7 +10,7 @@ on:
         description: "Optional: part of SQS queue name to match"
         required: false
       action:
-        description: "Choose whether to pause or resume the trigger"
+        description: "Pause or resume the trigger"
         required: true
         type: choice
         options:
@@ -18,58 +18,53 @@ on:
           - resume
 
 jobs:
-  toggle-trigger:
+  toggle:
     runs-on: ubuntu-latest
-
     permissions:
-      id-token: write   # for OIDC auth if using AWS roles
       contents: read
+      id-token: write  # REQUIRED for OIDC
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
+          role-to-assume: arn:aws:iam::224553687012:role/GitHubActionsIngestRole
           aws-region: us-east-1
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }} # optional if using OIDC
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-session-name: github-toggle
 
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Toggle Lambda SQS Trigger
+      - name: Toggle SQS Trigger
         env:
-          FUNCTION_NAME: ${{ github.event.inputs.function_name }}
-          QUEUE_NAME: ${{ github.event.inputs.queue_name }}
-          ACTION: ${{ github.event.inputs.action }}
+          FUNCTION_NAME: ${{ inputs.function_name }}
+          QUEUE_NAME: ${{ inputs.queue_name }}
+          ACTION: ${{ inputs.action }}
         run: |
-          echo "🔍 Fetching event source mappings for $FUNCTION_NAME..."
+          echo "Fetching event source mappings for $FUNCTION_NAME..."
           MAPPINGS=$(aws lambda list-event-source-mappings \
             --function-name "$FUNCTION_NAME" \
             --query 'EventSourceMappings[*].{UUID:UUID,ARN:EventSourceArn}' \
             --output json)
 
-          UUIDS=$(echo "$MAPPINGS" | jq -r ".[] | select(.ARN | test(\"$QUEUE_NAME\")) | .UUID")
+          UUIDS=$(echo "$MAPPINGS" | jq -r --arg q "$QUEUE_NAME" '.[] | select(.ARN | test($q)) | .UUID')
 
           if [ -z "$UUIDS" ]; then
-            echo "❌ No matching event source mappings found for $FUNCTION_NAME (Queue filter: $QUEUE_NAME)"
+            echo "No matching SQS triggers found (filter: '$QUEUE_NAME')"
             exit 1
           fi
 
           for UUID in $UUIDS; do
             if [ "$ACTION" = "pause" ]; then
-              echo "⏸️  Disabling mapping $UUID..."
-              aws lambda update-event-source-mapping --uuid "$UUID" --enabled false > /dev/null
-            elif [ "$ACTION" = "resume" ]; then
-              echo "▶️  Enabling mapping $UUID..."
-              aws lambda update-event-source-mapping --uuid "$UUID" --enabled true > /dev/null
+              echo "Disabling trigger $UUID..."
+              aws lambda update-event-source-mapping --uuid "$UUID" --no-enabled
             else
-              echo "❌ Invalid action: $ACTION"
-              exit 1
+              echo "Enabling trigger $UUID..."
+              aws lambda update-event-source-mapping --uuid "$UUID" --enabled true
             fi
           done
 
-          echo "✅ Done. All matching mappings updated."
+          echo "Done. $ACTION applied to $(echo "$UUIDS" | wc -w) trigger(s)."
