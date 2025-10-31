@@ -90,7 +90,7 @@ graph TD
 ## 📂 Directory Structure
 
 ```
-church-ai-pipeline/
+church-ai-musician-accompaniement/
 ├── .github/
 │   ├── workflows/               # Optional: trigger CodeBuild
 │   │   ├── trigger-build.yml    # NEW: One workflow to start CodeBuild
@@ -165,6 +165,7 @@ aws s3 cp test.onnx s3://clgihq-audio/models/debug-test.onnx
 ---
 
 ### ✝️ THE CHURCH AI ACCOMPANIMENT — HELPING CHURCHES ONE KEY AT A TIME
+
 
 
 
