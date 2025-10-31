@@ -4,6 +4,7 @@ on:
     paths:
       - 'trainer/**'
       - '.github/workflows/build-trainer.yml'
+  workflow_dispatch:
 
 jobs:
   build-deploy:
@@ -30,17 +31,17 @@ jobs:
     - name: Build, tag, and push trainer image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: trainer-repo
+        ECR_REPOSITORY: clgihq-trainer
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -f trainer/Dockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker build -f trainer/Dockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./trainer
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "image_uri=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-    - name: Deploy to Batch
+    - name: Update AWS Batch Job Definition
       run: |
         aws batch register-job-definition \
-          --job-definition-name trainer-${{ github.run_number }} \
+          --job-definition-name clgihq-trainer-v1 \
           --type container \
           --container-properties '{
             "image": "${{ steps.build.outputs.image_uri }}",
@@ -49,6 +50,8 @@ jobs:
             "resourceRequirements": [{"type": "GPU", "value": "1"}],
             "environment": [
               {"name": "S3_BUCKET", "value": "clgihq-audio"},
-              {"name": "MODEL_OUTPUT", "value": "models/model-${{ github.run_number }}.pt"}
+              {"name": "MODEL_OUTPUT", "value": "s3://clgihq-audio/models/checkpoint.pt"}
             ]
-          }'
+          }' \
+          --region us-east-1
+        echo "Updated job definition: clgihq-trainer-v1"
