@@ -1,4 +1,3 @@
-````markdown
 # 🎶 Church AI Pipeline  
 **Black Gospel Pentecostal Audio → AI Model → Cantabile Sings**  
 *Fully automated, GitHub-native, iPhone-controlled*
@@ -142,4 +141,5 @@ aws s3 cp test.onnx s3://clgihq-audio/models/debug-test.onnx
 ```
 
 ```
+
 
