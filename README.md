@@ -13,7 +13,7 @@
 | -------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | AWS ACCOUNT                            | Need S3, SQS, Lambda, Batch, IAM, ECS, ECR, Autoscalling, EC2, Sagemaker               | Expect $200 a month for training with GPU machines are needed                          |
 | Radeon Gaming PC w/ GPU 5090           | Needed to reduce latency to under 15ms so AI music is not laggy                        | Aprox $6000                                                                            |
-| RME BABYFACE FS PRO AUDIO INTERFACE    | Needed to connect a microphone or PA system to the PC and reduce latency               | Aprox $1000                                                                            |
+| RME BABYFACE FS PRO AUDIO INTERFACE    | Needed to connect a microphone or PA system to the PC and reduce latency               | Aprox $1000      [www.rme-usa.com](https://www.rme-usa.com/babyface-pro.html)          | 
 | PC OPTIMAZATION SCRIPTS                | Further help reduce latency & Jitter (throttles CPU and RAM an other parts of the PC)  | Cantibile is used in this version which is $60, other option are better for up to $500 |
 
 
@@ -165,6 +165,7 @@ aws s3 cp test.onnx s3://clgihq-audio/models/debug-test.onnx
 ---
 
 ### ✝️ THE CHURCH AI ACCOMPANIMENT — HELPING CHURCHES ONE KEY AT A TIME
+
 
 
 
