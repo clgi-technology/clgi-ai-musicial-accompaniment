@@ -200,7 +200,7 @@ See: Visual Studio Build Guide
 
 ## 🏗️ Visual Studio / Build Instructions (Windows)
 
-# 1. Install:
+### 1. Install:
 
 Visual Studio 2022 (Desktop C++)
 
@@ -212,7 +212,7 @@ ONNX Runtime (CPU or CUDA EP)
 
 loopMIDI + Cantabile
 
-# 2. Configure build:
+### 2. Configure build:
 
 ```
 cmake .. -G "Visual Studio 17 2022" -A x64 ^
@@ -224,13 +224,13 @@ cmake .. -G "Visual Studio 17 2022" -A x64 ^
   -DONNXRUNTIME_LIBRARY="C:/onnxruntime/lib/onnxruntime.lib"
 ```
 
-# 3. Build:
+### 3. Build:
 
 ```
 cmake --build . --config Release
 ```
 
-# 4. Run:
+### 4. Run:
 ```
 .\Release\realtime_ai_music.exe model.onnx --cuda
 
