@@ -1,3 +1,4 @@
+```
 church-ai-pipeline/
 ├── .github/workflows/
 │   ├── build-trainer.yml
@@ -18,3 +19,4 @@ church-ai-pipeline/
 │   └── chunk.ps1
 ├── README.md
 └── .gitignore
+```
