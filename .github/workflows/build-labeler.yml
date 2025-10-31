@@ -38,20 +38,27 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "image_uri=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-    - name: Update AWS Batch Job Definition
+    - name: Update AWS Batch Job Definition (Existing)
       run: |
+        IMAGE_URI="${{ steps.build.outputs.image_uri }}"
+        if [ -z "$IMAGE_URI" ]; then
+          echo "Error: image_uri is empty"
+          exit 1
+        fi
+        # Use jq to inject image_uri into JSON
+        CONTAINER_JSON=$(jq -n --argjson vcpus 4 --argjson memory 16000 --arg image "$IMAGE_URI" '{
+          image: $image,
+          vcpus: $vcpus,
+          memory: $memory,
+          environment: [
+            {"name": "S3_BUCKET", "value": "clgihq-audio"},
+            {"name": "INPUT_DIR", "value": "data/raw_audio"},
+            {"name": "OUTPUT_DIR", "value": "data/annotations"}
+          ]
+        }')
         aws batch register-job-definition \
           --job-definition-name clgihq-labeler-v1 \
           --type container \
-          --container-properties '{
-            "image": "${{ steps.build.outputs.image_uri }}",
-            "vcpus": 4,
-            "memory": 16000,
-            "environment": [
-              {"name": "S3_BUCKET", "value": "clgihq-audio"},
-              {"name": "INPUT_DIR", "value": "data/raw_audio"},
-              {"name": "OUTPUT_DIR", "value": "data/annotations"}
-            ]
-          }' \
+          --container-properties "$CONTAINER_JSON" \
           --region us-east-1
         echo "Updated job definition: clgihq-labeler-v1"
