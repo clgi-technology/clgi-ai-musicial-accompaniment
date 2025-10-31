@@ -92,18 +92,23 @@ graph TD
 ```
 church-ai-pipeline/
 ├── .github/
-│   ├── workflows/
-│   │   ├── build-trainer.yml
-│   │   ├── build-labeler.yml
-│   │   ├── build-verify.yml
-│   │   └── download-chunk.yml
+│   ├── workflows/               # Optional: trigger CodeBuild
+│   │   ├── trigger-build.yml    # NEW: One workflow to start CodeBuild
+│   │   └── download-chunk.yml   # Keep: Manual YouTube ingest
 │   └── scripts/
-│       └── download_chunk.py
-├── trainer/          → Dockerfile, trainer.py
-├── labeler/          → Dockerfile, labeler.py
-├── verify/           → Dockerfile, lambda_function.py
-├── urls.txt          → Gospel source URLs
-└── README.md         → This file
+│       └── download_chunk.py    # Keep: Used by workflow
+├── trainer/
+│   ├── Dockerfile
+│   └── trainer.py
+├── labeler/
+│   ├── Dockerfile
+│   └── labeler.py
+├── verify/
+│   ├── Dockerfile
+│   └── lambda_function.py
+├── urls.txt                     # Gospel source URLs
+├── buildspec.yml                # NEW: Main CodeBuild spec (all-in-one)
+└── README.md
 
 ```
 
@@ -160,6 +165,7 @@ aws s3 cp test.onnx s3://clgihq-audio/models/debug-test.onnx
 ---
 
 ### ✝️ THE CHURCH AI ACCOMPANIMENT — HELPING CHURCHES ONE KEY AT A TIME
+
 
 
 
