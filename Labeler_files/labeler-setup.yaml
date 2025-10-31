@@ -1,0 +1,188 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CLGIHQ Audio Labeler Pipeline - S3 -> SQS -> Lambda -> Batch
+
+Parameters:
+  LambdaS3Bucket:
+    Type: String
+    Description: S3 bucket containing Lambda zip
+  LambdaS3Key:
+    Type: String
+    Description: S3 key (path) to Lambda zip
+  ContainerImageUri:
+    Type: String
+    Description: ECR container image URI for Batch job
+  InstanceRole:
+    Type: String
+    Description: ARN of instance role for Batch EC2
+  Subnets:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Subnets for Batch compute env
+  SecurityGroups:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+    Description: Security groups for Batch compute env
+
+Resources:
+
+  ########################################
+  # S3 Bucket
+  ########################################
+  AudioBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: clgihq-audio
+
+  ########################################
+  # SQS Queue
+  ########################################
+  AudioQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: audio-pipeline-queue
+
+  ########################################
+  # IAM Role for Lambda
+  ########################################
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: clgihq-batch-trigger-lambda-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaBatchSQSPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - batch:SubmitJob
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource: "arn:aws:s3:::clgihq-audio/*"
+
+  ########################################
+  # Lambda Function
+  ########################################
+  BatchTriggerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: clgihq-batch-trigger
+      Handler: lambda_function.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.12
+      Timeout: 30
+      MemorySize: 128
+      Code:
+        S3Bucket: !Ref LambdaS3Bucket
+        S3Key: !Ref LambdaS3Key
+      Environment:
+        Variables:
+          S3_BUCKET: clgihq-audio
+          JOB_QUEUE: !Ref BatchJobQueue
+          JOB_DEFINITION: !Ref BatchJobDefinition
+
+  ########################################
+  # Event Source Mapping
+  ########################################
+  LambdaSQSEventMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 10
+      EventSourceArn: !GetAtt AudioQueue.Arn
+      FunctionName: !GetAtt BatchTriggerFunction.Arn
+      Enabled: true
+
+  ########################################
+  # IAM Role for AWS Batch
+  ########################################
+  BatchJobRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: clgihq-batch-job-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: S3AccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource: "arn:aws:s3:::clgihq-audio/*"
+
+  ########################################
+  # AWS Batch Compute Environment
+  ########################################
+  BatchComputeEnvironment:
+    Type: AWS::Batch::ComputeEnvironment
+    Properties:
+      ComputeEnvironmentName: clgihq-batch-compute-env
+      Type: MANAGED
+      State: ENABLED
+      ComputeResources:
+        Type: EC2
+        MinvCpus: 0
+        MaxvCpus: 8
+        DesiredvCpus: 0
+        InstanceTypes: [m5.large]
+        Subnets: !Ref Subnets
+        SecurityGroupIds: !Ref SecurityGroups
+        InstanceRole: !Ref InstanceRole
+      ServiceRole: !Ref BatchServiceRole
+
+  ########################################
+  # AWS Batch Job Queue
+  ########################################
+  BatchJobQueue:
+    Type: AWS::Batch::JobQueue
+    Properties:
+      JobQueueName: clgihq-job-queue
+      State: ENABLED
+      Priority: 1
+      ComputeEnvironmentOrder:
+        - Order: 1
+          ComputeEnvironment: !Ref BatchComputeEnvironment
+
+  ########################################
+  # AWS Batch Job Definition
+  ########################################
+  BatchJobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Properties:
+      JobDefinitionName: clgihq-label-job
+      Type: container
+      ContainerProperties:
+        Image: !Ref ContainerImageUri
+        Vcpus: 1
+        Memory: 2048
+        JobRoleArn: !GetAtt BatchJobRole.Arn
+        Environment:
+          - Name: PLACEHOLDER
+            Value: EMPTY # Real env vars injected at submit time
+        Command: ["python", "label.py"]
