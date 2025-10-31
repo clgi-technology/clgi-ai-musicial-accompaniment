@@ -121,7 +121,7 @@ while running:
     sleep(short)
 ```
 
-⚡ ONNX Runtime / GPU Tips
+## ⚡ ONNX Runtime / GPU Tips
 
 Create one long-lived ONNX session at startup; never recreate per-frame.
 
@@ -135,7 +135,7 @@ Set GPU power mode → “Prefer Maximum Performance”.
 
 Quantize models (INT8) where possible for deterministic low-latency.
 
-🧠 Jitter / Glitch Mitigation
+## 🧠 Jitter / Glitch Mitigation
 
 Pin threads (use SetThreadAffinityMask / Process Lasso).
 
@@ -149,7 +149,7 @@ Provide direct vocal monitoring to avoid performer latency.
 
 Keep 10–20 % CPU headroom.
 
-🧪 Validation Checklist
+## 🧪 Validation Checklist
 
 ✅ Measure interface round-trip latency (no NN).
 
@@ -161,12 +161,13 @@ Keep 10–20 % CPU headroom.
 
 ✅ Stress test under load → ensure no dropouts.
 
-🚨 Failure Recovery
+## 🚨 Failure Recovery
 Issue	Cause	Mitigation
 Inference spike	GPU stall or thread pre-empt	Skip cycle / repeat last chord
 DPC spike	Faulty driver	Update / disable offending device
 GPU timeout	Kernel launch freeze	Timeout + fallback to CPU model
-🧰 Minimal Requirements
+
+## 🧰 Minimal Requirements
 
 Audio interface: low-latency ASIO (RME preferred).
 
@@ -181,7 +182,7 @@ Language stack: C++ (JUCE or PortAudio + RtMidi) or Rust.
 
 Lock-free queues: e.g. moodycamel::ConcurrentQueue.
 
-🧩 Real-Time Implementation Skeleton
+## 🧩 Real-Time Implementation Skeleton
 
 Complete C++ sources provided in this repository:
 
@@ -197,7 +198,7 @@ CMakeLists.txt — Visual Studio build config
 
 See: Visual Studio Build Guide
 
-🏗️ Visual Studio / Build Instructions (Windows)
+## 🏗️ Visual Studio / Build Instructions (Windows)
 
 Install:
 
@@ -235,7 +236,7 @@ Run:
 
 ```
 
-🎯 The Vision
+## 🎯 The Vision
 
 “Let the AI play behind the voice of the saints.”
 
