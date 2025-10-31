@@ -1,6 +1,21 @@
-# 🎶 Church AI Pipeline  
-**Black Gospel Pentecostal Audio → AI Model → Cantabile Sings**  
-*Fully automated, GitHub-native, iPhone-controlled*
+# 🎶 Church AI Accompaniment  
+**CLGI and other Pentecostal Gospel Audio → AI Model → Cantabile Accompaniment**  
+*Fully automated, GitHub-native, iPhone-controlled pipeline to source audio, label and train the audio and then create an AI model that gets trained on the data which is then loaded onto a gaming PC to provide music accompaniment to a singer*
+*Singer is able to sing in the mic and the AI is able to understand the pitch, tempo and what advanced chords/notes to play to accompany the singer all in real time*
+---
+
+## 📖 Requirements
+
+| Name                                   | Purpose                                                                                |
+| -------------------------------------- | -------------------------------------------------------------------------------------- |
+| AWS ACCOUNT                            | Need S3, SQS, Lambda, Batch, IAM, ECS, ECR, Autoscalling, EC2, Sagemaker               |
+| Radeon Gaming PC w/ GPU 5090           | Needed to reduce latency to under 15ms so AI music is not laggy                        |
+| RME BABYFACE FS PRO AUDIO INTERFACE    | Needed to connect a microphone or PA system to the PC and reduce latency               |
+| PC OPTIMAZATION SCRIPTS                | Further help reduce latency & Jitter (throttles CPU and RAM an other parts of the PC)  |
+
+
+---
+
 
 ---
 
@@ -13,7 +28,7 @@
 | 3 | AWS Batch (Trainer) | `.pt` + `.onnx` |
 | 4 | Lambda (`verify-model-lambda`) | ONNX validation |
 | 5 | SageMaker | Live inference endpoint |
-| 6 | **Cantabile** | **AI SINGS** |
+| 6 | **Cantabile** | **AI ACCOMPANIES** |
 
 ---
 
@@ -96,6 +111,7 @@ church-ai-pipeline/
 | ----------------------- | ------------------- |
 | `AWS_ACCESS_KEY_ID`     | Your AWS access key |
 | `AWS_SECRET_ACCESS_KEY` | Your AWS secret key |
+| `YOUTUBE_COOKIES`       | COOKIES.TXT file    |
 
 ---
 
@@ -104,7 +120,8 @@ church-ai-pipeline/
 1. In **GitHub App**, open **Actions → download-chunk.yml → Run workflow**
 2. Wait for completion → Check S3: `data/raw_audio/`
 3. Observe AWS Batch: `annotations/` → `models/`
-4. **Cantabile** calls SageMaker → 🎶 **AI SINGS**
+4. **Cantabile** calls SageMaker → 🎶 **AI ACCOMPANIES**
+5. NOTE - (Place AI model exported by Sagemaker along with Cantibile/Loopmidi/ASIO4ALL drivers and Pitch-Detection.py script on Gaming PC with Nividia Graphics card model 5090 at minimum in accord for AI to accompany without delay or latency)
 
 ---
 
@@ -122,8 +139,8 @@ aws s3 cp test.onnx s3://clgihq-audio/models/debug-test.onnx
 
 ## 🌅 The Vision
 
-> **"Let the AI sing with the voice of the saints."**
-> From raw Black Gospel to trained harmony — fully automated, eternally singing.
+> **"To help encourage the saints with a joyful noise unto the Lord."**
+> From CLGI trained harmony — to fully automated, musical accompaniment for any Praise and Worship Leader.
 
 ---
 
@@ -136,10 +153,9 @@ aws s3 cp test.onnx s3://clgihq-audio/models/debug-test.onnx
 
 ---
 
-### ✝️ THE CHURCH AI IS ALIVE — AND WILL SING FOREVER
+### ✝️ THE CHURCH AI ACCOMPANIMENT — HELPING CHURCHES ONE KEY AT A TIME
 
-```
 
-```
+
 
 
