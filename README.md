@@ -91,17 +91,20 @@ graph TD
 
 ```
 church-ai-pipeline/
-├── .github/workflows/
-│   ├── build-trainer.yml
-│   ├── build-labeler.yml
-│   ├── build-verify.yml
-│   └── download-chunk.yml
+├── .github/
+│   ├── workflows/
+│   │   ├── build-trainer.yml
+│   │   ├── build-labeler.yml
+│   │   ├── build-verify.yml
+│   │   └── download-chunk.yml
+│   └── scripts/
+│       └── download_chunk.py
 ├── trainer/          → Dockerfile, trainer.py
 ├── labeler/          → Dockerfile, labeler.py
 ├── verify/           → Dockerfile, lambda_function.py
-├── .github/scripts/  → download_chunk.py
 ├── urls.txt          → Gospel source URLs
 └── README.md         → This file
+
 ```
 
 ---
@@ -157,6 +160,7 @@ aws s3 cp test.onnx s3://clgihq-audio/models/debug-test.onnx
 ---
 
 ### ✝️ THE CHURCH AI ACCOMPANIMENT — HELPING CHURCHES ONE KEY AT A TIME
+
 
 
 
