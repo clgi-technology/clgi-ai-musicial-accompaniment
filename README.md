@@ -1,6 +1,7 @@
 # 🎶 Church AI Accompaniment  
   
-**Fully automated, GitHub-native, iPhone-controlled pipeline to source audio then label and train the audio and then create an AI model that gets trained on the data which is then loaded onto a gaming PC to provide music accompaniment to a singer**
+***Fully automated, GitHub-native, iPhone-controlled pipeline to source audio then label and train the audio and then create an AI model that gets trained on the data which is then loaded onto a gaming PC to provide music accompaniment to a singer***
+
 *Singer is able to sing in the mic and the AI is able to understand the pitch, tempo and what advanced chords/notes to play to accompany the singer all in real time*
 *CLGI and other Pentecostal Gospel Audio → AI Model → Cantabile Accompaniment*
 
@@ -156,6 +157,7 @@ aws s3 cp test.onnx s3://clgihq-audio/models/debug-test.onnx
 ---
 
 ### ✝️ THE CHURCH AI ACCOMPANIMENT — HELPING CHURCHES ONE KEY AT A TIME
+
 
 
 
