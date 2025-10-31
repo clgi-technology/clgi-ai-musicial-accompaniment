@@ -62,14 +62,14 @@ graph TD
 
 ---
 
-## 🎵 Sources (DRM-Free Black Gospel)
+## 🎵 Sources (DRM-Free Pentacoastal Gospel)
 
 | Source             | Type                 | Link                                                     |
 | ------------------ | -------------------- | -------------------------------------------------------- |
 | YouTube            | Pentecostal Services | `urls.txt`                                               |
 | Internet Archive   | Public Domain        | [archive.org](https://archive.org)                       |
 | Free Music Archive | Gospel               | [freemusicarchive.org](https://freemusicarchive.org)     |
-| Baylor BGMPP       | Black Gospel Archive | [library.web.baylor.edu](https://library.web.baylor.edu) |
+| Baylor BGMPP       | Gospel Archive       | [library.web.baylor.edu](https://library.web.baylor.edu) |
 
 ---
 
@@ -142,7 +142,7 @@ aws s3 cp test.onnx s3://clgihq-audio/models/debug-test.onnx
 
 ## 🌅 The Vision
 
-> **"To help encourage the saints with a joyful noise unto the Lord."**
+> **"To help encourage the saints with making a joyful noise unto the Lord."**
 > From CLGI trained harmony — to fully automated, musical accompaniment for any Praise and Worship Leader.
 
 ---
@@ -157,6 +157,7 @@ aws s3 cp test.onnx s3://clgihq-audio/models/debug-test.onnx
 ---
 
 ### ✝️ THE CHURCH AI ACCOMPANIMENT — HELPING CHURCHES ONE KEY AT A TIME
+
 
 
 
