@@ -1,38 +1,16 @@
-```
-church-ai-pipeline/
-├── .github/workflows/
-│   ├── build-trainer.yml
-│   ├── build-labeler.yml
-│   ├── build-verify.yml
-│   └── download-chunk.yml
-├── trainer/
-│   ├── Dockerfile
-│   └── trainer.py
-├── labeler/
-│   ├── Dockerfile
-│   └── labeler.py
-├── verify/
-│   ├── Dockerfile
-│   └── lambda_function.py
-├── download-chunk/
-│   ├── download-chunk.ps1
-│   └── chunk.ps1
-├── .github/scripts/
-│   └── download_chunk.py
-├── urls.txt
-└── README.md
-```
+Absolutely — here’s a **clean, professional, and GitHub-ready** version of your README, rewritten in Markdown with better structure, readability, and formatting (while preserving your original soul and theme):
 
-# Church AI Pipeline  
+````markdown
+# 🎶 Church AI Pipeline  
 **Black Gospel Pentecostal Audio → AI Model → Cantabile Sings**  
 *Fully automated, GitHub-native, iPhone-controlled*
 
 ---
 
-## Overview
+## 📖 Overview
 
 | Step | Service | Output |
-|------|--------|--------|
+|------|----------|---------|
 | 1 | `download-chunk.yml` | Raw audio → S3 |
 | 2 | AWS Batch (Labeler) | Annotations |
 | 3 | AWS Batch (Trainer) | `.pt` + `.onnx` |
@@ -42,10 +20,9 @@ church-ai-pipeline/
 
 ---
 
-## Pipeline Flow
+## 🔄 Pipeline Flow
 
-```
-mermaid
+```mermaid
 graph TD
     A[GitHub Actions] --> B[S3: Raw Audio]
     B --> C[AWS Batch: Labeler]
@@ -55,30 +32,50 @@ graph TD
     F --> G[Lambda: Verify]
     G --> H[SageMaker Endpoint]
     H --> I[Cantabile Sings]
+````
 
-GitHub Actions (Auto-Run on Push)
+---
 
+## ⚙️ GitHub Actions (Auto-Run on Push)
 
-WorkflowTriggerActiondownload-chunk.ymlWeekly or ManualDownload + chunk gospel audiobuild-labeler.ymlPush to labeler/Build & deploy labelerbuild-trainer.ymlPush to trainer/Build & deploy trainerbuild-verify.ymlPush to verify/Update Lambda
+| Workflow             | Trigger            | Description                   |
+| -------------------- | ------------------ | ----------------------------- |
+| `download-chunk.yml` | Weekly or Manual   | Download & chunk gospel audio |
+| `build-labeler.yml`  | Push to `labeler/` | Build & deploy labeler image  |
+| `build-trainer.yml`  | Push to `trainer/` | Build & deploy trainer image  |
+| `build-verify.yml`   | Push to `verify/`  | Update verification Lambda    |
 
-Sources (DRM-Free Black Gospel)
+---
 
+## 🎵 Sources (DRM-Free Black Gospel)
 
-SourceTypeLinkYouTubePentecostal Servicesurls.txtInternet ArchivePublic Domainarchive.orgFree Music ArchiveGospelfreemusicarchive.orgBaylor BGMPPBlack Gospel Archivelibrary.web.baylor.edu
+| Source             | Type                 | Link                                                     |
+| ------------------ | -------------------- | -------------------------------------------------------- |
+| YouTube            | Pentecostal Services | `urls.txt`                                               |
+| Internet Archive   | Public Domain        | [archive.org](https://archive.org)                       |
+| Free Music Archive | Gospel               | [freemusicarchive.org](https://freemusicarchive.org)     |
+| Baylor BGMPP       | Black Gospel Archive | [library.web.baylor.edu](https://library.web.baylor.edu) |
 
-iPhone Control (No Computer)
+---
 
-GitHub App → Edit file → Commit → Auto-build
-Actions → Run download-chunk.yml → Start pipeline
-AWS Console App → CloudShell → Run:
-bashaws s3 ls s3://clgihq-audio/models/
-aws logs tail /aws/lambda/verify-model-lambda
-aws batch list-jobs --job-queue gpu-queue
+## 📱 iPhone Control (No Computer Required)
 
+1. Open **GitHub App** → Edit file → Commit → Auto-build triggers
+2. In **Actions tab**, run `download-chunk.yml` → starts full pipeline
+3. Use **AWS Console App → CloudShell** to monitor:
 
+   ```bash
+   aws s3 ls s3://clgihq-audio/models/
+   aws logs tail /aws/lambda/verify-model-lambda
+   aws batch list-jobs --job-queue gpu-queue
+   ```
 
-Directory Structure
-textchurch-ai-pipeline/
+---
+
+## 📂 Directory Structure
+
+```
+church-ai-pipeline/
 ├── .github/workflows/
 │   ├── build-trainer.yml
 │   ├── build-labeler.yml
@@ -90,36 +87,63 @@ textchurch-ai-pipeline/
 ├── .github/scripts/  → download_chunk.py
 ├── urls.txt          → Gospel source URLs
 └── README.md         → This file
+```
 
-Secrets (GitHub Settings → Secrets)
+---
 
+## 🔐 GitHub Secrets
 
-NameValueAWS_ACCESS_KEY_IDYour keyAWS_SECRET_ACCESS_KEYYour secret
+> Set these in **Settings → Secrets and Variables → Actions**
 
-Test the Pipeline (iPhone)
+| Name                    | Description         |
+| ----------------------- | ------------------- |
+| `AWS_ACCESS_KEY_ID`     | Your AWS access key |
+| `AWS_SECRET_ACCESS_KEY` | Your AWS secret key |
 
-GitHub App → Actions → download-chunk.yml → Run workflow
-Wait → Check S3: data/raw_audio/
-Watch Batch jobs → annotations/ → models/
-Cantabile → Call SageMaker → AI SINGS
+---
 
+## 🧪 Test the Pipeline (from iPhone)
 
-Local Development (Optional)
-powershell# Build & deploy verify Lambda
+1. In **GitHub App**, open **Actions → download-chunk.yml → Run workflow**
+2. Wait for completion → Check S3: `data/raw_audio/`
+3. Observe AWS Batch: `annotations/` → `models/`
+4. **Cantabile** calls SageMaker → 🎶 **AI SINGS**
+
+---
+
+## 💻 Local Development (Optional)
+
+```powershell
+# Build & deploy the verify Lambda
 .\verify-model-lambda-deploy.ps1
 
-# Test
+# Test upload
 aws s3 cp test.onnx s3://clgihq-audio/models/debug-test.onnx
+```
 
-The Vision
+---
 
-"Let the AI sing with the voice of the saints."
-— From raw Black Gospel to AI harmony, fully automated, eternally singing.
+## 🌅 The Vision
 
+> **"Let the AI sing with the voice of the saints."**
+> From raw Black Gospel to trained harmony — fully automated, eternally singing.
 
-Built with
+---
 
-GitHub Actions
-AWS Batch + Lambda + SageMaker
-Docker + Python
-iPhone + AWS Console App
+## 🧱 Built With
+
+* **GitHub Actions** — automation engine
+* **AWS Batch, Lambda, SageMaker** — model lifecycle
+* **Docker + Python** — reproducible builds
+* **iPhone + AWS Console App** — mobile control
+
+---
+
+### ✝️ THE CHURCH AI IS ALIVE — AND WILL SING FOREVER
+
+```
+
+---
+
+Would you like me to make a **light + dark mode styled version** (with emojis optimized for GitHub rendering and color-coded code blocks) or a **professional documentation version** (for internal or public repo)?
+```
