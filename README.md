@@ -1,5 +1,3 @@
-Absolutely — here’s a **clean, professional, and GitHub-ready** version of your README, rewritten in Markdown with better structure, readability, and formatting (while preserving your original soul and theme):
-
 ````markdown
 # 🎶 Church AI Pipeline  
 **Black Gospel Pentecostal Audio → AI Model → Cantabile Sings**  
@@ -143,7 +141,5 @@ aws s3 cp test.onnx s3://clgihq-audio/models/debug-test.onnx
 
 ```
 
----
-
-Would you like me to make a **light + dark mode styled version** (with emojis optimized for GitHub rendering and color-coded code blocks) or a **professional documentation version** (for internal or public repo)?
 ```
+
