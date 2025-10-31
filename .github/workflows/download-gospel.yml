@@ -1,0 +1,41 @@
+name: Download + Chunk Black Gospel
+on:
+  schedule:
+    - cron: '0 2 * * 0'  # Weekly Sundays
+  workflow_dispatch:
+    inputs:
+      source:
+        description: 'Source: youtube | archive | stockmusic'
+        required: true
+        default: 'youtube'
+
+jobs:
+  download:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install FFmpeg
+      uses: dlang/forex-action@v1
+      with:
+        package: ffmpeg
+
+    - name: Download + Chunk
+      env:
+        SOURCE: ${{ github.event.inputs.source || 'youtube' }}
+      run: |
+        pip install yt-dlp ffmpeg-python
+        python .github/scripts/download_chunk.py $SOURCE
+
+    - name: Upload to S3
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        aws s3 sync raw_audio/ s3://clgihq-audio/data/raw_audio/ --delete
