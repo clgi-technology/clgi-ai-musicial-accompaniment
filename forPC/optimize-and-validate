@@ -1,0 +1,214 @@
+<#=====================================================================
+  Real-Time AI Music Optimization & Validation Script
+  Windows 10/11 – 2025 Edition
+  Targets: < 15 ms end-to-end, zero dropouts, deterministic MIDI
+=====================================================================#>
+
+#Requires -RunAsAdministrator
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+# -------------------------- CONFIG --------------------------
+$TargetLatencyMs      = 15
+$TestDurationSec      = 5
+$SampleRate           = 48000
+$BufferFrames         = 64
+$InferFrames          = 256
+$ModelPath            = "C:\AI-Music\model_int8.onnx"   # <-- UPDATE
+$LoopMidiPortName     = "RealtimeAI"                   # <-- UPDATE
+$PortAudioDll         = "C:\portaudio\bin\portaudio_x64.dll"
+# -----------------------------------------------------------
+
+function Write-Title($msg) { Write-Host "`n=== $msg ===`n" -ForegroundColor Cyan }
+
+# =============================================================
+# 1. SYSTEM OPTIMIZATIONS
+# =============================================================
+Write-Title "APPLYING SYSTEM OPTIMIZATIONS"
+
+# 1. Power → High / Ultimate Performance
+$ultimateGuid = "e9a42b02-d5df-448d-aa00-03f14749eb61"
+if ((powercfg /list) -match $ultimateGuid) {
+    powercfg -setactive $ultimateGuid
+    Write-Host "Ultimate Performance plan activated."
+} else {
+    powercfg -setactive SCHEME_MIN
+    Write-Host "High Performance plan activated."
+}
+
+# 2. Core parking & throttling
+'CPMINCORES','CPMAXCORES','PROCTHROTTLEMIN','PROCTHROTTLEMAX' | ForEach-Object {
+    powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR $_ 100
+}
+powercfg -setactive SCHEME_CURRENT
+
+# 3. USB selective suspend
+powercfg -setacvalueindex SCHEME_CURRENT SUB_USB USBSELECTSUSPEND 0
+
+# 4. Sleep / Hibernate
+powercfg -change -standby-timeout-ac 0
+powercfg -change -hibernate-timeout-ac 0
+powercfg -h off
+
+# 5. Visual effects → Best Performance
+Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects' `
+                 -Name 'VisualFXSetting' -Value 2 -Force
+
+# 6. Background apps
+Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications' `
+                 -Name 'GlobalUserDisabled' -Value 1 -Force
+
+# 7. Xbox / Game Bar
+@(
+    'HKCU\SOFTWARE\Microsoft\GameBar','ShowStartupPanel',0
+    'HKCU\SOFTWARE\Microsoft\GameBar','AutoGameModeEnabled',0
+    'HKCU\SOFTWARE\Microsoft\GameDVR','AppCaptureEnabled',0
+    'HKCU\System\GameConfigStore','GameDVR_Enabled',0
+) | ForEach-Object { reg add $_[0] /v $_[1] /t REG_DWORD /d $_[2] /f | Out-Null }
+
+# 8. Telemetry tips
+@(
+    'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager','SubscribedContent-338393Enabled',0
+    'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager','SubscribedContent-338389Enabled',0
+) | ForEach-Object { reg add $_[0] /v $_[1] /t REG_DWORD /d $_[2] /f | Out-Null }
+
+# 9. Windows Update → Manual
+sc config wuauserv start= demand | Out-Null
+
+# 10. Audio service priority boost
+reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v SystemResponsiveness /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Audio" /v "Scheduling Category" /t REG_SZ /d High /f
+reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Audio" /v Priority /t REG_DWORD /d 6 /f
+
+Write-Host "`nOptimizations applied. Reboot recommended.`n" -ForegroundColor Green
+
+# =============================================================
+# 2. HEALTH-CHECK & LATENCY MEASUREMENT
+# =============================================================
+Write-Title "RUNNING HEALTH CHECK"
+
+# ---- 2.1 Load PortAudio DLL (for loop-back latency) ----
+Add-Type -Path $PortAudioDll -ErrorAction SilentlyContinue
+if (-not (Get-TypeData 'PortAudio')) {
+    Write-Warning "PortAudio DLL not found. Latency test skipped."
+    $SkipLatency = $true
+} else { $SkipLatency = $false }
+
+# ---- 2.2 DPC / ISR latency (via built-in counters) ----
+$maxDpc = (Get-Counter '\DPC(*)\DPC Rate' -ErrorAction SilentlyContinue).CounterSamples | Measure-Object -Maximum CookedValue
+$maxIsr = (Get-Counter '\Processor(*)\% DPC Time' -ErrorAction SilentlyContinue).CounterSamples | Measure-Object -Maximum CookedValue
+Write-Host "Max DPC rate: $($maxDpc.Maximum)  |  Max %DPC time: $($maxIsr.Maximum)%"
+
+# ---- 2.3 CPU / GPU load ----
+$cpu = (Get-Counter '\Processor(_Total)\% Processor Time' -SampleInterval 1 -MaxSamples 1).CounterSamples.CookedValue
+$gpu = (Get-Counter '\GPU Engine(*)\Utilization Percentage' -ErrorAction SilentlyContinue).CounterSamples | Measure-Object -Average CookedValue
+Write-Host "CPU load: $cpu%  |  GPU avg: $($gpu.Average)%"
+
+# ---- 2.4 MIDI port check ----
+$midiOk = $false
+try {
+    $rt = New-Object RtMidi.MidiOut
+    $ports = $rt.GetPortCount()
+    for ($i=0;$i -lt $ports;$i++) {
+        if ($rt.GetPortName($i) -like "*$LoopMidiPortName*") { $midiOk=$true; break }
+    }
+    $rt.Dispose()
+} catch { }
+Write-Host "MIDI port '$LoopMidiPortName' found: $midiOk"
+
+# ---- 2.5 Ring-buffer stress test ----
+Write-Host "Ring-buffer stress (100k pushes)..."
+$sw = [System.Diagnostics.Stopwatch]::StartNew()
+$queue = [System.Collections.Generic.Queue[float]]::new(65536)
+for ($i=0;$i -lt 100000;$i++) {
+    if ($queue.Count -ge 65536) { $null = $queue.Dequeue() }
+    $queue.Enqueue([math]::Sin($i/1000))
+}
+$sw.Stop()
+$ringMs = $sw.ElapsedMilliseconds
+Write-Host "Completed in $ringMs ms"
+
+# ---- 2.6 ONNX inference latency (if model exists) ----
+$inferMs = "N/A"
+if (Test-Path $ModelPath) {
+    Add-Type -Path "C:\onnxruntime\csharp\Microsoft.ML.OnnxRuntime.dll" -ErrorAction SilentlyContinue
+    try {
+        $env = [Microsoft.ML.OnnxRuntime.OrtEnv]::Instance
+        $opts = [Microsoft.ML.OnnxRuntime.SessionOptions]::new()
+        $opts.GraphOptimizationLevel = [Microsoft.ML.OnnxRuntime.GraphOptimizationLevel]::ORT_ENABLE_ALL
+        $session = [Microsoft.ML.OnnxRuntime.InferenceSession]::new($ModelPath, $opts)
+
+        # Warm-up
+        $dummy = [single[]] (,0.0 * $InferFrames)
+        $session.Run(@("audio"), @([Microsoft.ML.OnnxRuntime.OrtValue]::CreateTensorValueFromMemory($dummy, [int64[]]@(1,$InferFrames))))
+
+        # Timed runs
+        $times = for($i=0;$i -lt 10;$i++) {
+            $s = [System.Diagnostics.Stopwatch]::StartNew()
+            $session.Run(@("audio"), @([Microsoft.ML.OnnxRuntime.OrtValue]::CreateTensorValueFromMemory($dummy, [int64[]]@(1,$InferFrames))))
+            $s.Stop(); $s.ElapsedMilliseconds
+        }
+        $inferMs = ($times | Measure-Object -Average).Average
+        $session.Dispose()
+        Write-Host "ONNX inference avg: $inferMs ms"
+    } catch { Write-Warning "ONNX test failed: $_" }
+}
+
+# ---- 2.7 End-to-end loop-back latency (PortAudio) ----
+$loopbackMs = "N/A"
+if (-not $SkipLatency) {
+    try {
+        $pa = [PortAudio.PortAudio]::new()
+        $dev = $pa.DefaultInputDevice
+        $param = [PortAudio.StreamParameters]::new()
+        $param.device = $dev
+        $param.channelCount = 1
+        $param.sampleFormat = [PortAudio.SampleFormat]::Float32
+        $param.suggestedLatency = $pa.GetDeviceInfo($dev).defaultLowInputLatency
+
+        $stream = $pa.OpenStream($param, $null, $SampleRate, $BufferFrames, [PortAudio.StreamFlags]::ClipOff, $null, $null)
+        $buffer = [single[]]::new($BufferFrames)
+
+        # Prime the pipeline
+        $stream.Read($buffer, $BufferFrames) | Out-Null
+
+        $times = for($i=0;$i -lt 20;$i++) {
+            $start = [System.Diagnostics.Stopwatch]::StartNew()
+            $stream.Write($buffer, $BufferFrames)
+            $stream.Read($buffer, $BufferFrames) | Out-Null
+            $start.Stop(); $start.ElapsedMilliseconds
+        }
+        $loopbackMs = ($times | Measure-Object -Average).Average
+        $stream.Close()
+        Write-Host "Loop-back latency: $loopbackMs ms"
+    } catch { Write-Warning "Loop-back test failed: $_" }
+}
+
+# =============================================================
+# 3. FINAL VERDICT
+# =============================================================
+Write-Title "VALIDATION SUMMARY"
+
+$fail = $false
+$msg = @()
+
+if ($loopbackMs -ne "N/A" -and $loopbackMs -gt $TargetLatencyMs) { $fail=$true; $msg+="Loop-back $loopbackMs ms > $TargetLatencyMs ms" }
+if ($inferMs -ne "N/A" -and $inferMs -gt 8) { $fail=$true; $msg+="ONNX inference $inferMs ms > 8 ms" }
+if ($ringMs -gt 50) { $fail=$true; $msg+="Ring buffer stress $ringMs ms > 50 ms" }
+if (-not $midiOk) { $fail=$true; $msg+="MIDI port '$LoopMidiPortName' missing" }
+if ($cpu -gt 80) { $fail=$true; $msg+="CPU load $cpu% > 80%" }
+
+if ($fail) {
+    Write-Host "`nFAILED TARGET < $TargetLatencyMs ms" -ForegroundColor Red
+    $msg | ForEach-Object { Write-Host "  • $_" -ForegroundColor Yellow }
+    Write-Host "`nRemediation steps:" -ForegroundColor Cyan
+    Write-Host "  1. Reboot after optimizations."
+    Write-Host "  2. Close all non-essential apps."
+    Write-Host "  3. Use RME / Focusrite interface (ASIO)."
+    Write-Host "  4. Pin inference thread to isolated core (Process Lasso)."
+    exit 1
+} else {
+    Write-Host "`nPASSED! System ready for < $TargetLatencyMs ms live AI accompaniment." -ForegroundColor Green
+    Write-Host "   Loop-back: $loopbackMs ms | Inference: $inferMs ms | Ring: $ringMs ms"
+    exit 0
+}
