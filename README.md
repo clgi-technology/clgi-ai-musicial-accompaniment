@@ -573,7 +573,7 @@ One-Click Stack	Optional CloudFormation template to deploy everything.
 ⸻
 
 launch the file called ai-pipeline-setup-stack.yml and deploy like so:
-
+(use ` backtick symbol  instead of \ if using Powershell)
 ```
 
 aws cloudformation deploy \
