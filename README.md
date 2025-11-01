@@ -1,4 +1,4 @@
- 🎶 Church AI Accompaniment
+# 🎶 Church AI Accompaniment
 
 Fully automated, GitHub-native, iPhone-controlled pipeline that sources, labels, trains, and deploys Pentecostal Gospel audio into an AI model that provides real-time musical accompaniment for live singers.
 
