@@ -552,3 +552,36 @@ One-Click Stack	Optional CloudFormation template to deploy everything.
 
 
 ⸻
+
+## ai-pipeline-stack.yml) you can deploy with aws cloudformation deploy (or via the Console). It provisions:
+	•	S3 bucket with lifecycle rule
+	•	SQS queue and proper S3→SQS policy so S3 can send notifications to SQS
+	•	IAM roles and policies for Lambda, Batch service, Batch instance profile, and GitHub OIDC role (for GitHub Actions)
+	•	Lambda function with inline Python to read SQS messages and submit Batch jobs
+	•	AWS Batch Compute Environment (EC2, optionally GPU-capable) + Job Queue + Job Definition (placeholder container)
+	•	ECR repositories for labeler, trainer, verify containers
+	•	Parameters for toggling S3→SQS event wiring and choosing instance types (so you can select G5 when enabled)
+	•	Outputs for key resources
+
+## Important notes before deploying
+	•	This template creates IAM roles (uses CAPABILITY_NAMED_IAM during deploy).
+	•	If you intend to use GPU (G5) instances, request G5 quotas in EC2 Limits beforehand — G5 is not enabled by default.
+	•	You will need to push container images to the created ECR repos and set the BATCH_JOB_DEF environment variable on Lambda (the template makes a placeholder job def — update as needed).
+	•	Replace parameter defaults like GitHubRepo and GitHubOrg when you create the GitHubOIDCRole trust policy.
+	•	This is a deployable starting point — you may tweak least-privilege policies for production.
+
+⸻
+
+launch the file called ai-pipeline-setup-stack.yml and deploy like so:
+
+```
+
+aws cloudformation deploy \
+  --template-file ai-pipeline-stack.yml \
+  --stack-name ai-pipeline \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --parameter-overrides GitHubOrg=your-org GitHubRepo=your-repo
+
+
+```
+
