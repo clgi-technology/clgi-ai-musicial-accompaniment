@@ -7,13 +7,13 @@ CLGI and other Pentecostal Gospel Audio → AI Model → Cantabile Accompaniment
 
 ⸻
 
-📜 Purpose
+## 📜 Purpose
 
 To empower Pentecostal and Gospel musicians with an AI-driven accompanist that listens, learns, and plays along in real time — enabling worship anywhere, by anyone.
 
 ⸻
 
-⚙️ System Overview
+## ⚙️ System Overview
 
 Layer	Environment	Purpose
 GitHub Actions + OIDC	Cloud	Secure automation using GitHub → AWS trust (no keys)
@@ -24,7 +24,7 @@ iPhone	Controller	Triggers workflows and monitors status remotely
 
 ⸻
 
-🧩 Requirements
+## 🧩 Requirements
 
 Name	Purpose	Approx. Cost
 AWS Account	Required for S3, SQS, Lambda, Batch, CodeBuild, SageMaker	~$200/mo
@@ -38,12 +38,12 @@ GitHub Mobile + AWS Console App	iPhone-based monitoring and control	Free
 
 ⸻
 
-🏗️ Infrastructure Setup (Before Running the Pipeline)
+## 🏗️ Infrastructure Setup (Before Running the Pipeline)
 
 ⚠️ The AI pipeline requires core AWS resources (S3, SQS, Lambda, Batch, CodeBuild, SageMaker).
 These can be created manually or automatically using the provided CloudFormation stack or PowerShell setup script.
 
-Option 1 – One-Time Setup Script (Recommended)
+### Option 1 – One-Time Setup Script (Recommended)
 
 Use a PowerShell or Bash helper script (example):
 
@@ -60,7 +60,7 @@ aws cloudformation deploy \
 # - AWS Batch compute environment + job queues
 # - CodeBuild project for container builds
 
-Option 2 – High-Level Manual Steps
+### Option 2 – High-Level Manual Steps
 	1.	Create an S3 bucket for storing audio and model files
 	2.	Create an AWS Batch compute environment (Fargate or GPU EC2)
 	3.	Create ECR repositories for the labeler, trainer, and verifier containers
@@ -70,16 +70,17 @@ Option 2 – High-Level Manual Steps
 
 ⸻
 
-🔐 Authentication (OIDC)
+## 🔐 Authentication (OIDC)
 
 GitHub OIDC is used instead of static AWS credentials.
 This means no AWS_ACCESS_KEY_ID or SECRET_ACCESS_KEY are required.
 
-Steps:
+### Steps:
 	1.	Create an IAM role in AWS with trust policy for your GitHub org/repo.
 	2.	Assign permissions for S3, Batch, Lambda, SageMaker, and CodeBuild.
 	3.	Reference the OIDC role ARN in your GitHub Actions workflows:
 
+```
 permissions:
   id-token: write
   contents: read
@@ -97,12 +98,12 @@ jobs:
           aws-region: us-east-1
 
 
-
+```
 ⸻
 
-🔄 Full Pipeline Flow
+## 🔄 Full Pipeline Flow
 
-Step	Platform	Function	Output
+### Step	Platform	Function	Output
 1	GitHub Actions	download-chunk.yml — Downloads & chunks Gospel audio	S3 raw_audio/
 2	AWS Batch	Labeler — Extracts note/pitch annotations	S3 annotations/
 3	AWS Batch	Trainer — Builds .pt + .onnx models	S3 models/
@@ -113,7 +114,7 @@ Step	Platform	Function	Output
 
 ⸻
 
-Pipeline Diagram
+### Pipeline Diagram
 
 graph TD
     A[GitHub Actions] --> B[S3: Raw Audio]
@@ -128,7 +129,7 @@ graph TD
 
 ⸻
 
-⚙️ GitHub Actions Workflows
+## ⚙️ GitHub Actions Workflows
 
 Workflow	Trigger	Description
 download-chunk.yml	Manual or Weekly	Download and chunk Gospel audio
@@ -141,9 +142,9 @@ inference-sync.yml	On model update	Sync new ONNX to Gaming PC S3 folder
 
 ⸻
 
-💻 Local Real-Time System (C++ + Python)
+## 💻 Local Real-Time System (C++ + Python)
 
-Component	Purpose
+### Component	Purpose
 PitchDetection.cpp	Real-time pitch/tempo extraction
 ONNXRuntime.cpp	Loads exported model for inference
 MidiMapper.cpp	Converts model outputs to MIDI chords
@@ -159,8 +160,9 @@ AI_Accompaniment.exe --model model_latest.onnx --midi-out "LoopMIDI Port 1"
 
 ⸻
 
-📁 Directory Structure
+## 📁 Directory Structure
 
+```
 church-ai-musician-accompaniment/
 ├── .github/
 │   ├── workflows/
@@ -190,25 +192,27 @@ church-ai-musician-accompaniment/
 ├── buildspec.yml
 └── README.md
 
-
+```
 ⸻
 
-📱 iPhone Control
+## 📱 iPhone Control
 	1.	Open GitHub App → Actions → Run download-chunk.yml
 	2.	Monitor progress via AWS Console Mobile App → CloudShell
 	3.	Commands to monitor:
 
+```
 aws s3 ls s3://clgihq-audio/models/
 aws batch list-jobs --job-queue gpu-queue
 aws logs tail /aws/lambda/verify-model-lambda
 
+```
 
 	4.	When model verified → download .onnx → load into PC C++ engine
 	5.	Launch Cantabile → 🎶 AI ACCOMPANIES IN REAL TIME
 
 ⸻
 
-🧠 Training and Performance Notes
+## 🧠 Training and Performance Notes
 	•	Trainer uses AWS Batch GPU instances (e.g. g5.xlarge).
 	•	Model exported to .onnx for cross-platform C++ runtime.
 	•	Local inference must maintain:
@@ -219,9 +223,9 @@ aws logs tail /aws/lambda/verify-model-lambda
 
 ⸻
 
-🎵 Audio Sources
+## 🎵 Audio Sources
 
-Source	Type	Link
+### Source	Type	Link
 YouTube	Pentecostal Services	urls.txt
 Internet Archive	Public Domain	archive.org￼
 Free Music Archive	Gospel	freemusicarchive.org￼
@@ -230,14 +234,14 @@ Baylor BGMPP	Gospel Archive	library.web.baylor.edu￼
 
 ⸻
 
-🌅 The Vision
+## 🌅 The Vision
 
 “To help encourage the saints with making a joyful noise unto the Lord.”
 From CLGI-trained harmony to fully automated accompaniment for every Praise and Worship leader.
 
 ⸻
 
-🧱 Built With
+## 🧱 Built With
 	•	GitHub Actions (OIDC) – secure automation
 	•	AWS Batch / Lambda / SageMaker – model lifecycle
 	•	Docker + Python – reproducible builds
@@ -246,7 +250,7 @@ From CLGI-trained harmony to fully automated accompaniment for every Praise and 
 
 ⸻
 
-✝️ THE CHURCH AI ACCOMPANIMENT
+## ✝️ THE CHURCH AI ACCOMPANIMENT
 
 Helping Churches — One Key at a Time
 
@@ -255,7 +259,7 @@ Helping Churches — One Key at a Time
 
 ⸻
 
-🧠 AI Pipeline Setup: S3 → SQS → Lambda → AWS Batch (with GitHub OIDC)
+## 🧠 AI Pipeline Setup: S3 → SQS → Lambda → AWS Batch (with GitHub OIDC)
 
 This repository implements a modular, event-driven AI data pipeline using AWS services and GitHub Actions (OIDC) authentication — no AWS secrets required.
 
@@ -263,17 +267,17 @@ It supports both CPU and GPU (G5) compute environments and provides a clear path
 
 ⸻
 
-⚙️ Pipeline Overview
+## ⚙️ Pipeline Overview
 
-S3 (data upload)
+### S3 (data upload)
   ↓ event trigger
-SQS (queue buffering)
+### SQS (queue buffering)
   ↓ event trigger
-Lambda (dispatch job)
+### Lambda (dispatch job)
   ↓
-AWS Batch (C++ or Python workload)
+### AWS Batch (C++ or Python workload)
 
-Data flow summary:
+### Data flow summary:
 	1.	Upload a file to S3.
 	2.	S3 event sends notification to SQS.
 	3.	Lambda consumes the SQS message and triggers an AWS Batch job.
@@ -282,14 +286,15 @@ Data flow summary:
 
 ⸻
 
-🧩 OIDC Authentication (No AWS Secrets Required)
+## 🧩 OIDC Authentication (No AWS Secrets Required)
 
 The GitHub workflow uses OpenID Connect (OIDC) for temporary credentials to access AWS.
 
-Steps to enable:
+### Steps to enable:
 	1.	In IAM → Create Role → “Web Identity” → “GitHub.”
 	2.	Add your repo in the trust relationship (replace with your repo name):
 
+```
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -308,6 +313,7 @@ Steps to enable:
   ]
 }
 
+```
 
 	3.	Attach these AWS managed policies:
 	•	AmazonS3FullAccess
@@ -317,6 +323,7 @@ Steps to enable:
 	•	CloudWatchLogsFullAccess
 	4.	In your GitHub workflow:
 
+```
 permissions:
   id-token: write
   contents: read
@@ -327,11 +334,11 @@ permissions:
     role-to-assume: arn:aws:iam::<account-id>:role/GitHubOIDCRole
     aws-region: us-east-1
 
-
+```
 
 ⸻
 
-🧠 GPU / G5 Instance Requirement
+## 🧠 GPU / G5 Instance Requirement
 
 If your AWS Batch jobs require GPU acceleration:
 	•	Ensure G5 EC2 instances are enabled in your AWS account.
@@ -345,21 +352,22 @@ InstanceTypes:
 
 ⸻
 
-🧰 Optional YAML Control File
+## 🧰 Optional YAML Control File
 
 You can include a simple pipeline-control.yml file in your repo to enable/disable Lambda triggers:
-
+```
 lambda_trigger:
   enabled: true
 
 Set enabled: false to pause the pipeline temporarily without deleting resources.
-
+```
 ⸻
 
-🧱 Bootstrap Script (Optional Quick Setup)
+## 🧱 Bootstrap Script (Optional Quick Setup)
 
 You can use the following script to create the pipeline components manually:
 
+```
 #!/bin/bash
 # setup_pipeline.sh — quick setup script
 
@@ -402,17 +410,17 @@ aws batch create-job-queue \
   --priority 1 \
   --compute-environment-order order=1,computeEnvironment=$BATCH_ENV
 
-
+```
 ⸻
 
-☁️ Optional CloudFormation Stack
+## ☁️ Optional CloudFormation Stack
 
 You can deploy everything automatically using CloudFormation.
 This template provisions:
 
-✅ Components Created
+## ✅ Components Created
 
-Resource	Description
+### Resource	Description
 S3 Bucket	Stores input/output data and event triggers.
 S3 Lifecycle Rule	Cleans up or archives processed files.
 SQS Queue	Buffers S3 events to decouple processing.
@@ -424,7 +432,7 @@ IAM Roles & Policies	Grants correct access to each AWS component.
 
 ⸻
 
-🧾 Roles and Permissions Created
+## 🧾 Roles and Permissions Created
 
 Role	Key Permissions	Used By
 LambdaExecutionRole	AWSLambdaBasicExecutionRole, AmazonSQSFullAccess, AWSBatchSubmitJobAccess	Lambda
@@ -437,7 +445,8 @@ GitHubOIDCRole	Trusts GitHub OIDC tokens for temporary AWS access	GitHub Actions
 
 ⸻
 
-📜 CloudFormation Template (Excerpt)
+## 📜 CloudFormation Template (Excerpt)
+```
 
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "AI Pipeline Stack - S3 → SQS → Lambda → AWS Batch with OIDC"
@@ -515,24 +524,25 @@ Outputs:
   LambdaName:
     Value: !Ref LambdaFunction
 
-
+```
 ⸻
 
-🪜 Deployment
+## 🪜 Deployment
 
 To deploy the stack:
 
+```
 aws cloudformation deploy \
   --template-file ai-pipeline-stack.yml \
   --stack-name ai-pipeline \
   --capabilities CAPABILITY_NAMED_IAM
 
-
+```
 ⸻
 
-✅ Summary
+## ✅ Summary
 
-Feature	Description
+### Feature	Description
 Fully Event-Driven	No cron jobs — triggers cascade automatically.
 No Static Secrets	Uses OIDC federation from GitHub Actions.
 Configurable Pipeline	YAML toggle for pausing Lambda trigger.
